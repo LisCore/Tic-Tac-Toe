@@ -9,6 +9,17 @@
     padding-right: 75px;
 }
 
+.a-grid {
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 24px;
+    width: 100px;
+    height: 100px;
+    border: 1px solid black;
+}
+
 .modal {
     display: none;
     position: fixed;

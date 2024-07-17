@@ -22,21 +22,25 @@ const Gameboard = {
             for (let j = 0; j < 3; ++j) {
                 this.gameboard[i][j] = null;
                 let createGrid = document.createElement("div");
-                createGrid.style.width = "100px";
-                createGrid.style.height = "100px";
-                createGrid.style.border = "1px solid black";
+                createGrid.className = "a-grid";
+                createGrid.addEventListener("click", () => ControlFlow.markCell(i, j));
                 grid.appendChild(createGrid);
+                this.gameboard[i][j] = createGrid;
             }
         }
-    }
+    },
 };
 
-const Player = {
-    name: '',
-    marker: '',
-}
+// const Player = {
+//     name: '',
+//     marker: '',
+// }
 
 const ControlFlow = {
+    currentTurn: null,
+    player1: null,
+    player2: null,
+
     createFormModal: function () {
         const modalOverlay = document.createElement("div");
         modalOverlay.className = "modal-overlay";
@@ -80,41 +84,50 @@ const ControlFlow = {
         modalOverlay.classList.add("show");
         modal.classList.add("show");
     },
-    // updateInfo: function() {
-    //     const one = document.querySelector(".one");
-    //     const two = document.querySelector(".two");
-    //     let player1Color = 
-    //     let player2Color = 
-    // }
-    startGame: function () {
+    getPlayers: function () {
         const player1Name = document.getElementById("player1").value;
         const player2Name = document.getElementById("player2").value;
         const player1Color = document.getElementById("color1").value;
         const player2Color = document.getElementById("color2").value;
         const player1Type = document.querySelector('input[name="typeof"]:checked').value;
         console.log(player1Type);
-        if (player1Type.value === 'X')
+        if (player1Type === 'X')
             player2Type = 'O';
         else
             player2Type = 'X';
 
-        console.log(`Player 1: ${player1Name}, Color: ${player1Color}, Type: ${player1Type}`);
-        console.log(`Player 2: ${player2Name}, Color: ${player2Color}, Type: ${player2Type}`);
+        this.player1 = { name: player1Name, color: player1Color, type: player1Type };
+        this.player2 = { name: player2Name, color: player2Color, type: player2Type };
+        this.currentTurn = this.player1; // Start with player1
 
-        document.querySelector(".one").textContent = `Player 1: ${player1Name} (${player1Type})`;
-        document.querySelector(".one").style.color = player1Color;
-        document.querySelector(".two").textContent = `Player 2: ${player2Name} (${player2Type})`;
-        document.querySelector(".two").style.color = player2Color;
+        return { player1: this.player1, player2: this.player2 };
+    },
+    startGame: function () {
+        const { player1, player2 } = this.getPlayers();
+
+        console.log(`Player 1: ${player1.name}, Color: ${player1.color}, Type: ${player1.type}`);
+        console.log(`Player 2: ${player2.name}, Color: ${player2.color}, Type: ${player2.type}`);
+
+        document.querySelector(".one").textContent = `Player 1: ${player1.name} (${player1.type})`;
+        document.querySelector(".one").style.color = player1.color;
+        document.querySelector(".two").textContent = `Player 2: ${player2.name} (${player2.type})`;
+        document.querySelector(".two").style.color = player2.color;
 
         const modal = document.querySelector(".modal");
         const modalOverlay = document.querySelector(".modal-overlay");
         modal.classList.remove("show");
         modalOverlay.classList.remove("show");
-    }
-}
+    },
+    markCell: function (row, col) {
+        const cell = Gameboard.gameboard[row][col];
 
-// const Player1 = Object.create(Player);
-// const Gameboard1 = Object.create(Gameboard);
-// Gameboard1.init();
-// Player1.name = 'Corey';
-// alert(Player1.name);
+        if (!cell.textContent) { // Check if the cell is already marked
+            cell.textContent = this.currentTurn.type;
+            cell.style.color = this.currentTurn.color;
+            // cell.style.textAlign = "center";
+
+            // Switch turns
+            this.currentTurn = this.currentTurn === this.player1 ? this.player2 : this.player1;
+        }
+    },
+}
