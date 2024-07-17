@@ -5,6 +5,16 @@ document.addEventListener("DOMContentLoaded", function () {
 
 const Gameboard = {
     gameboard: [],
+    winningCombos: [
+        [0, 1, 2],
+        [3, 4, 5],
+        [6, 7, 8], // rows
+        [0, 3, 6],
+        [1, 4, 7],
+        [2, 5, 8], // columns
+        [0, 4, 8],
+        [2, 4, 6], // diagonals
+    ],
     //initialize the grid
     init: function () {
         const grid = document.querySelector(".game-board");
@@ -28,6 +38,36 @@ const Gameboard = {
                 this.gameboard[i][j] = createGrid;
             }
         }
+    },
+    checkCase: function (currentPlayer) {
+        //     // const grid = document.querySelector(".game-board");
+        //     for (let combo of this.winningCombos) {
+        //         if (
+        //             gameboard[combo[0]] &&
+        //             gameboard[combo[0]] === gameboard[combo[1]] &&
+        //             gameboard[combo[0]] === gameboard[combo[2]]
+        //         )
+        //             console.log("Winner");
+        //         return true;
+        //     }
+        //     console.log("Loser");
+        //     return false;
+        // },
+        const flatBoard = this.gameboard.flat().map(cell => cell.textContent);
+
+        for (let combo of this.winningCombos) {
+            if (
+                flatBoard[combo[0]] &&
+                flatBoard[combo[0]] === flatBoard[combo[1]] &&
+                flatBoard[combo[0]] === flatBoard[combo[2]]
+            ) {
+                console.log("Winner");
+                alert(`${currentPlayer.name} is the winner!`)
+                return true;
+            }
+        }
+        console.log("No Winner");
+        return false;
     },
 };
 
@@ -84,9 +124,26 @@ const ControlFlow = {
         modalOverlay.classList.add("show");
         modal.classList.add("show");
     },
+    //called from first line of startGame function 
     getPlayers: function () {
-        const player1Name = document.getElementById("player1").value;
-        const player2Name = document.getElementById("player2").value;
+        let player1Name;
+        let player2Name;
+        if (document.getElementById("player1").value === null)
+            player1Name = "Player1";
+        else
+            player1Name = document.getElementById("player1").value;
+        if (document.getElementById("player2").value === null) {
+            player2Name = document.getElementById("player1").value;
+            player2Name.value = "player2";
+        }
+        else
+            player2Name = document.getElementById("player2").value;
+
+
+        console.log(player2Name);
+
+
+
         const player1Color = document.getElementById("color1").value;
         const player2Color = document.getElementById("color2").value;
         const player1Type = document.querySelector('input[name="typeof"]:checked').value;
@@ -102,6 +159,7 @@ const ControlFlow = {
 
         return { player1: this.player1, player2: this.player2 };
     },
+    //called from the form onclick
     startGame: function () {
         const { player1, player2 } = this.getPlayers();
 
@@ -115,17 +173,20 @@ const ControlFlow = {
 
         const modal = document.querySelector(".modal");
         const modalOverlay = document.querySelector(".modal-overlay");
+        //removes the overlay
         modal.classList.remove("show");
         modalOverlay.classList.remove("show");
     },
+    //called from the onclick in gameboard object
     markCell: function (row, col) {
         const cell = Gameboard.gameboard[row][col];
 
         if (!cell.textContent) { // Check if the cell is already marked
             cell.textContent = this.currentTurn.type;
             cell.style.color = this.currentTurn.color;
-            // cell.style.textAlign = "center";
-
+            if (Gameboard.checkCase(this.currentTurn)) {
+                return; // Stop the game if there is a win
+            }
             // Switch turns
             this.currentTurn = this.currentTurn === this.player1 ? this.player2 : this.player1;
         }
