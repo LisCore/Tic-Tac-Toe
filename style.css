@@ -2,11 +2,26 @@
     text-align: center;
 }
 
+.game-board {
+    display: grid;
+    grid-template-columns: repeat(3, 100px);
+    grid-template-rows: repeat(3, 100px);
+    margin: auto;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
 .one,
 .two {
     display: inline-block;
     padding-left: 75px;
     padding-right: 75px;
+}
+
+.button {
+    text-align: center;
 }
 
 .a-grid {
@@ -67,4 +82,18 @@ select {
 
 input {
     width: 130px;
+}
+
+.button {
+    padding: 20px;
+    margin-left: 100px;
+    margin-top: 20px;
+    width: 100px;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+}
+
+.button:hover {
+    background-color: red;
 }

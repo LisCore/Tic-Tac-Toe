@@ -18,14 +18,7 @@ const Gameboard = {
     //initialize the grid
     init: function () {
         const grid = document.querySelector(".game-board");
-        grid.style.display = "grid";
-        grid.style.gridTemplateColumns = "repeat(3, 100px)";
-        grid.style.gridTemplateRows = "repeat(3, 100px)";
-        grid.style.margin = "auto";
-        grid.style.position = "absolute";
-        grid.style.top = "50%";
-        grid.style.left = "50%";
-        grid.style.transform = "translate(-50%, -50%)";
+        grid.innerHTML = "";
 
         for (let i = 0; i < 3; ++i) {
             this.gameboard[i] = [];
@@ -40,19 +33,6 @@ const Gameboard = {
         }
     },
     checkCase: function (currentPlayer) {
-        //     // const grid = document.querySelector(".game-board");
-        //     for (let combo of this.winningCombos) {
-        //         if (
-        //             gameboard[combo[0]] &&
-        //             gameboard[combo[0]] === gameboard[combo[1]] &&
-        //             gameboard[combo[0]] === gameboard[combo[2]]
-        //         )
-        //             console.log("Winner");
-        //         return true;
-        //     }
-        //     console.log("Loser");
-        //     return false;
-        // },
         const flatBoard = this.gameboard.flat().map(cell => cell.textContent);
 
         for (let combo of this.winningCombos) {
@@ -62,19 +42,37 @@ const Gameboard = {
                 flatBoard[combo[0]] === flatBoard[combo[2]]
             ) {
                 console.log("Winner");
-                alert(`${currentPlayer.name} is the winner!`)
+                alert(`${currentPlayer.name} is the winner!`);
+                this.restartGame();
                 return true;
             }
         }
         console.log("No Winner");
         return false;
     },
-};
+    checkDraw: function () {
+        const flatBoard = this.gameboard.flat().map(cell => cell.textContent);
+        return flatBoard.every(cell => cell);
+    },
+    restartGame: function () {
+        // const btn = document.querySelector(".button");
+        const grid = document.querySelector(".game-board");
+        let btn = document.createElement("button");
+        btn.className = "button";
+        btn.textContent = "Replay";
+        grid.appendChild(btn);
+        btn.addEventListener("click", () => {
+            while (grid.firstChild) {
+                grid.removeChild(grid.firstChild);
+            }
 
-// const Player = {
-//     name: '',
-//     marker: '',
-// }
+            this.gameboard = [];
+            ControlFlow.resetPlayers();
+            ControlFlow.createFormModal();
+            this.init();
+        });
+    },
+};
 
 const ControlFlow = {
     currentTurn: null,
@@ -82,6 +80,8 @@ const ControlFlow = {
     player2: null,
 
     createFormModal: function () {
+        const formContainer = document.getElementById("form-container");
+        formContainer.innerHTML = "";
         const modalOverlay = document.createElement("div");
         modalOverlay.className = "modal-overlay";
         document.body.appendChild(modalOverlay);
@@ -126,32 +126,13 @@ const ControlFlow = {
     },
     //called from first line of startGame function 
     getPlayers: function () {
-        let player1Name;
-        let player2Name;
-        if (document.getElementById("player1").value === null)
-            player1Name = "Player1";
-        else
-            player1Name = document.getElementById("player1").value;
-        if (document.getElementById("player2").value === null) {
-            player2Name = document.getElementById("player1").value;
-            player2Name.value = "player2";
-        }
-        else
-            player2Name = document.getElementById("player2").value;
-
-
-        console.log(player2Name);
-
-
+        const player1Name = document.getElementById("player1").value || "Player1";
+        const player2Name = document.getElementById("player2").value || "Player2";
 
         const player1Color = document.getElementById("color1").value;
         const player2Color = document.getElementById("color2").value;
         const player1Type = document.querySelector('input[name="typeof"]:checked').value;
-        console.log(player1Type);
-        if (player1Type === 'X')
-            player2Type = 'O';
-        else
-            player2Type = 'X';
+        const player2Type = player1Type === 'X' ? 'O' : 'X';
 
         this.player1 = { name: player1Name, color: player1Color, type: player1Type };
         this.player2 = { name: player2Name, color: player2Color, type: player2Type };
@@ -161,7 +142,13 @@ const ControlFlow = {
     },
     //called from the form onclick
     startGame: function () {
-        const { player1, player2 } = this.getPlayers();
+        let { player1, player2 } = this.getPlayers();
+
+        if (!player1 || !player2) {
+            console.error("Player information is not set correctly.");
+            return;
+        }
+
 
         console.log(`Player 1: ${player1.name}, Color: ${player1.color}, Type: ${player1.type}`);
         console.log(`Player 2: ${player2.name}, Color: ${player2.color}, Type: ${player2.type}`);
@@ -170,25 +157,61 @@ const ControlFlow = {
         document.querySelector(".one").style.color = player1.color;
         document.querySelector(".two").textContent = `Player 2: ${player2.name} (${player2.type})`;
         document.querySelector(".two").style.color = player2.color;
+        console.log(`Start game ${player1.name} ${player2.name}`);
 
         const modal = document.querySelector(".modal");
         const modalOverlay = document.querySelector(".modal-overlay");
-        //removes the overlay
-        modal.classList.remove("show");
-        modalOverlay.classList.remove("show");
+        // Ensure the modal and overlay exist before removing them
+        if (modal && modalOverlay) {
+            modal.classList.remove("show");
+            modalOverlay.classList.remove("show");
+            modal.remove();
+            modalOverlay.remove();
+        } else {
+            console.error("Modal or Modal Overlay not found.");
+        }
     },
     //called from the onclick in gameboard object
     markCell: function (row, col) {
         const cell = Gameboard.gameboard[row][col];
 
-        if (!cell.textContent) { // Check if the cell is already marked
+        // Check if the cell is already marked
+        if (!cell.textContent) {
+            // if not then input the X or O
             cell.textContent = this.currentTurn.type;
             cell.style.color = this.currentTurn.color;
+            // Stop the game if there is a win
             if (Gameboard.checkCase(this.currentTurn)) {
-                return; // Stop the game if there is a win
+                // Gameboard.restartGame();
+                return;
+            }
+            if (Gameboard.checkDraw()) {
+                alert("It's a draw!");
+                Gameboard.restartGame();
+                return;
             }
             // Switch turns
             this.currentTurn = this.currentTurn === this.player1 ? this.player2 : this.player1;
         }
     },
+    resetPlayers: function () {
+        console.log("Before reset:", this.player1, this.player2);
+        this.player1 = null;
+        this.player2 = null;
+        this.currentTurn = null;
+        console.log("After reset:", this.player1, this.player2);
+
+        // Reset the form fields
+        const form = document.getElementById("player-form");
+        if (form) {
+            form.reset();  // Reset the form fields
+        }
+
+        // Reset the player display info
+        document.querySelector(".one").textContent = "Player 1: N/A";
+        document.querySelector(".one").style.color = "black";
+        document.querySelector(".two").textContent = "Player 2: N/A";
+        document.querySelector(".two").style.color = "black";
+
+    }
 }
